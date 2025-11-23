@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Disney Christmas Map</title>
+    <!-- 引入更有節慶感的字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* --- 全局設定：聖誕配色 --- */
+        :root {
+            --xmas-red: #d42426;       
+            --xmas-dark-red: #8b0000;
+            --xmas-green: #146b3a;     
+            --xmas-gold: #f8b229;      
+            --snow-white: #ffffff;
+            /* 背景漸層：從深紅到深綠，充滿夜晚過節氣氛 */
+            --bg-gradient: linear-gradient(180deg, #8b0000 0%, #0f2e1a 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg-gradient);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            color: white;
+            position: relative;
+        }
+
+        /* --- 背景雪花特效 --- */
+        .snow-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .snowflake {
+            position: absolute;
+            color: #fff;
+            font-size: 1em;
+            opacity: 0.8;
+            top: -10%;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0.2; }
+        }
+
+        /* --- 頂部標題區 --- */
+        header {
+            height: 12%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+            border-bottom: 2px dashed rgba(248, 178, 41, 0.3);
+        }
+
+        h1 {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 1.8rem;
+            color: var(--xmas-gold);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mickey-icon {
+            width: 26px;
+            height: 26px;
+            background: var(--xmas-gold);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 10px rgba(248, 178, 41, 0.8);
+        }
+        .mickey-icon::before, .mickey-icon::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--xmas-gold);
+            border-radius: 50%;
+            top: -8px;
+        }
+        .mickey-icon::before { left: -4px; }
+        .mickey-icon::after { right: -4px; }
+
+        /* --- 圖片滑動區 --- */
+        .slider-container {
+            width: 100%;
+            height: 72%; 
+            display: flex;
+            align-items: center;
+            overflow-x: auto; 
+            scroll-snap-type: x mandatory; 
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
+            padding: 0 5%;
+            gap: 10px;
+            z-index: 5;
+        }
+
+        .slider-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* --- 卡片樣式 --- */
+        .card {
+            flex: 0 0 90%;
+            height: 100%;
+            background: transparent;
+            border-radius: 0;
+            scroll-snap-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: none;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .card-image img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain; /* 完整顯示不裁切 */
+            display: block;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+        }
+
+        /* 裝飾符號 */
+        .decor {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 28px;
+            z-index: 5;
+            pointer-events: none;
+            animation: spin 10s linear infinite; 
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- 頁碼顯示區 --- */
+        .page-counter {
+            height: 6%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.9rem; /* 小字體 */
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: var(--snow-white);
+            background: rgba(20, 107, 58, 0.6);
+            padding: 4px 15px;
+            border-radius: 15px;
+            margin-top: 5px;
+            border: 1px solid var(--xmas-gold);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        /* --- 底部指示點 --- */
+        .pagination {
+            height: 10%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px; /* 因為點變多了，間距稍微縮小 */
+            z-index: 10;
+            padding: 0 10px;
+            flex-wrap: nowrap; /* 確保不換行 */
+        }
+
+        .dot {
+            width: 6px; /* 因為有14個點，稍微縮小一點點以免太擠 */
+            height: 6px;
+            min-width: 6px; /* 防止被壓縮 */
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: var(--xmas-gold);
+            transform: scale(1.5);
+            box-shadow: 0 0 8px var(--xmas-gold);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="snow-container" id="snow-container"></div>
+
+    <header>
+        <div class="mickey-icon"></div>
+        <h1>&nbsp;Disney Christmas Map🎄</h1>
+        <div class="mickey-icon"></div>
+    </header>
+
+    <div class="slider-container" id="slider">
+        
+        <!-- 圖片 1 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/JzWh6nFd/1.jpg" alt="Img 1">
+                <div class="decor">❄️</div>
+            </div>
+        </div>
+        
+        <!-- 圖片 2 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/SRMyVF77/2.jpg" alt="Img 2">
+                <div class="decor">🎁</div>
+            </div>
+        </div>
+
+        <!-- 圖片 3 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/g2D6380k/3.jpg" alt="Img 3">
+                <div class="decor">⛄</div>
+            </div>
+        </div>
+
+        <!-- 圖片 4 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/nrBXrQ5K/4.jpg" alt="Img 4">
+                <div class="decor">🦌</div>
+            </div>
+        </div>
+
+        <!-- 圖片 5 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/YqN4wYQH/5.jpg" alt="Img 5">
+                <div class="decor">❄️</div>
+            </div>
+        </div>
+
+        <!-- 圖片 6 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/vTFmJZmC/6.jpg" alt="Img 6">
+                <div class="decor">🔔</div>
+            </div>
+        </div>
+
+        <!-- 圖片 7 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/tJQgK4T4/7.jpg" alt="Img 7">
+                <div class="decor">🎁</div>
+            </div>
+        </div>
+
+        <!-- 圖片 8 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/SKnNjM2w/8.jpg" alt="Img 8">
+                <div class="decor">❄️</div>
+            </div>
+        </div>
+
+        <!-- 圖片 9 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/q7NMg3hY/9.jpg" alt="Img 9">
+                <div class="decor">⛄</div>
+            </div>
+        </div>
+
+        <!-- 圖片 10 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/5tXNjCYh/10.jpg" alt="Img 10">
+                <div class="decor">🦌</div>
+            </div>
+        </div>
+
+        <!-- 圖片 11 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/d0htDyZt/11.jpg" alt="Img 11">
+                <div class="decor">❄️</div>
+            </div>
+        </div>
+
+        <!-- 圖片 12 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/3wkJWv0W/12.jpg" alt="Img 12">
+                <div class="decor">🔔</div>
+            </div>
+        </div>
+
+        <!-- 圖片 13 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/BvjQtKPj/13.jpg" alt="Img 13">
+                <div class="decor">🎁</div>
+            </div>
+        </div>
+
+        <!-- 圖片 14 -->
+        <div class="card">
+            <div class="card-image">
+                <img src="https://i.postimg.cc/mrP2hH1c/14.jpg" alt="Img 14">
+                <div class="decor">✨</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 頁碼計數器 -->
+    <div class="page-counter" id="counter">
+        1 / 14
+    </div>
+
+    <!-- 14個圓點 -->
+    <div class="pagination" id="pagination">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <script>
+        // 雪花特效
+        const snowContainer = document.getElementById('snow-container');
+        const createSnowflakes = () => {
+            const snowCount = 20; 
+            for (let i = 0; i < snowCount; i++) {
+                const snow = document.createElement('div');
+                snow.classList.add('snowflake');
+                snow.innerHTML = '❄';
+                snow.style.left = Math.random() * 100 + '%';
+                snow.style.animationDuration = Math.random() * 3 + 5 + 's';
+                snow.style.fontSize = Math.random() * 10 + 10 + 'px';
+                snow.style.animationDelay = Math.random() * 5 + 's';
+                snowContainer.appendChild(snow);
+            }
+        };
+        createSnowflakes();
+
+        // 圖片滑動邏輯
+        const slider = document.getElementById('slider');
+        const dots = document.querySelectorAll('.dot');
+        const cards = document.querySelectorAll('.card');
+        const counter = document.getElementById('counter');
+
+        const observerOptions = {
+            root: slider,
+            threshold: 0.6 
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const index = Array.from(cards).indexOf(entry.target);
+                    
+                    dots.forEach(dot => dot.classList.remove('active'));
+                    if(dots[index]) {
+                        dots[index].classList.add('active');
+                    }
+
+                    counter.innerText = `${index + 1} / ${cards.length}`;
+                }
+            });
+        }, observerOptions);
+
+        cards.forEach(card => {
+            observer.observe(card);
+        });
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                cards[index].scrollIntoView({ behavior: 'smooth', inline: 'center' });
+            });
+        });
+    </script>
+</body>
+</html>
